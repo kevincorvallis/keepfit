@@ -1,0 +1,67 @@
+@import '@fontsource/barlow/400.css';
+@import '@fontsource/barlow/500.css';
+@import '@fontsource/barlow/600.css';
+@import '@fontsource/barlow-condensed/500.css';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+@import 'tailwindcss';
+
+@theme {
+  /* Rubber-mat darks (warm, never pure black) */
+  --color-ink: #0e0d0c;
+  --color-surface: #191715;
+  --color-raised: #23201d;
+  --color-line: #33302b;
+
+  /* Chalk text scale */
+  --color-chalk: #f2efe9;
+  --color-dust: #a39c90;
+  --color-faint: #6e675c;
+
+  /* IPF competition plate palette — functional color, not decoration */
+  --color-plate-red: #e0483e; /* 25 kg — primary action, PRs */
+  --color-plate-blue: #3e66c4; /* 20 kg */
+  --color-plate-yellow: #e3b341; /* 15 kg — warnings, holds */
+  --color-plate-green: #4cae73; /* 10 kg — completed, success */
+  --color-plate-white: #f2efe9; /* 5 kg */
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Barlow', system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+}
+
+html {
+  background: var(--color-ink);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-ink);
+  color: var(--color-chalk);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* Scoreboard numerals everywhere numbers carry weight */
+.numeral {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-chalk);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
