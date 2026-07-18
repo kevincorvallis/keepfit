@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import type { Exercise, Program, ProgressionState, Session, Settings } from '../lib/types'
 import { seedExercises, seedPrograms, defaultSettings } from './seed'
 
-export class KeepFitDB extends Dexie {
+export class ApogeeDB extends Dexie {
   exercises!: Table<Exercise, string>
   programs!: Table<Program, string>
   sessions!: Table<Session, string>
@@ -10,7 +10,7 @@ export class KeepFitDB extends Dexie {
   settings!: Table<Settings, string>
 
   constructor() {
-    super('keepfit')
+    super('apogee')
     this.version(1).stores({
       exercises: 'id, name, equipment',
       programs: 'id, name, createdAt',
@@ -21,7 +21,7 @@ export class KeepFitDB extends Dexie {
   }
 }
 
-export const db = new KeepFitDB()
+export const db = new ApogeeDB()
 
 /** Idempotent first-run seed: exercise catalog, templates, settings. */
 export async function ensureSeeded(): Promise<void> {

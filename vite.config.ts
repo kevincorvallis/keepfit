@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'KeepFit',
-        short_name: 'KeepFit',
+        name: 'Apogee',
+        short_name: 'Apogee',
         description: 'Fast, science-based strength training log',
         theme_color: '#0b0b0d',
         background_color: '#0b0b0d',

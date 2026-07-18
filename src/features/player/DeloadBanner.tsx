@@ -6,7 +6,7 @@ import { assessFatigue, type ExerciseFatigueInput } from '../../lib/deload'
 import { historyForExercise } from '../../lib/history'
 import { useExerciseMap, useFinishedSessions, usePrograms } from '../../state/hooks'
 
-const DISMISS_KEY = 'keepfit:deload-dismissed'
+const DISMISS_KEY = 'apogee:deload-dismissed'
 const DAY = 86_400_000
 
 /**

@@ -54,7 +54,7 @@ export function DataSection({ settings }: { settings: Settings }) {
       sessions,
       progressionState,
     })
-    download(json, `keepfit-backup-${localDateStamp()}.json`, 'application/json')
+    download(json, `apogee-backup-${localDateStamp()}.json`, 'application/json')
   }
 
   const exportCsv = async () => {
@@ -64,7 +64,7 @@ export function DataSection({ settings }: { settings: Settings }) {
     ])
     const finished = sessions.filter((s) => s.finishedAt !== undefined)
     const csv = sessionsToCsv(finished, new Map(exercises.map((e) => [e.id, e])))
-    download(csv, `keepfit-sets-${localDateStamp()}.csv`, 'text/csv')
+    download(csv, `apogee-sets-${localDateStamp()}.csv`, 'text/csv')
   }
 
   const pickFile = async (file: File) => {

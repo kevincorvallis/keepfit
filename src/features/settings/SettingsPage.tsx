@@ -43,8 +43,10 @@ function RestTimerSection({ settings }: { settings: Settings }) {
 function AboutSection() {
   return (
     <SectionCard label="About">
-      <p className="font-display text-xl font-semibold uppercase">KeepFit v0.1</p>
-      <p className="mt-1 text-sm text-dust">Evidence-based auto-progression, explained.</p>
+      <p className="font-display text-xl font-semibold uppercase">Apogee v0.1</p>
+      <p className="mt-1 text-sm text-dust">
+        The apogee is the highest point of an orbit. Evidence-based auto-progression, explained.
+      </p>
       <p className="mt-3 text-sm text-dust">
         Suggestions follow double/linear progression with RIR-aware holds and trend-triggered
         deloads.

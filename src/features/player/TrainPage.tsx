@@ -47,7 +47,7 @@ function StartHome() {
 
   return (
     <div>
-      <PageHeader sub="KeepFit" title="Train" />
+      <PageHeader sub="Apogee" title="Train" />
       <DeloadBanner />
       {programs === undefined ? null : programs.length === 0 ? (
         <EmptyState

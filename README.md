@@ -1,4 +1,6 @@
-# KeepFit
+# Apogee
+
+> The apogee is the highest point of an orbit — the peak you only reach when ascent and recovery are timed right.
 
 A local-first strength-training PWA that pairs **sub-2-second set logging** with **evidence-based, explainable auto-progression** — the combination none of the mainstream apps ship (fast loggers have no intelligence; science-forward apps are slow, expensive, or online-only).
 

@@ -33,7 +33,7 @@ import {
 } from './playerUtil'
 import { primeAudio } from './sound'
 
-const NOTIFY_ASKED_KEY = 'keepfit:notification-asked'
+const NOTIFY_ASKED_KEY = 'apogee:notification-asked'
 
 /** Short breather between paired exercises inside a superset round. */
 const SUPERSET_TRANSITION_SECONDS = 15
