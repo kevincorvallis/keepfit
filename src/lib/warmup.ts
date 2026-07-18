@@ -8,9 +8,9 @@ export interface WarmupSet {
 
 /**
  * Ramp toward a working weight. Barbell ramps start with the empty bar;
- * other equipment uses a short two-step ramp. Steps that land at or above
- * the working weight (or below the bar) are dropped, so light working
- * weights naturally get shorter ramps.
+ * other equipment uses a short two-step ramp. Steps that land within one
+ * weight step of the working weight (or at/below the bar) are dropped, so
+ * light working weights naturally get shorter ramps.
  */
 export function warmupPlan(args: {
   workingWeight: number
@@ -33,7 +33,9 @@ export function warmupPlan(args: {
     ]
     for (const [fraction, reps] of ramp) {
       const w = roundToStep(workingWeight * fraction, roundTo, 'nearest')
-      if (w <= barWeight || w >= workingWeight) continue
+      // A rounded step within one weight step of the working weight is
+      // effectively the working weight — drop it (e.g. 22.5 before 25).
+      if (w <= barWeight || w + roundTo > workingWeight - 1e-9) continue
       sets.push({ weight: w, reps })
     }
     // Only ramp sets meaningfully below the working weight survive; dedupe.
