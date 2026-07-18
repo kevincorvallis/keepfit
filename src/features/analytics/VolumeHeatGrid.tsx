@@ -57,7 +57,7 @@ export function VolumeHeatGrid({
           <div className="mt-3 grid grid-cols-[3.75rem_repeat(8,minmax(0,1fr))] gap-1">
             <div aria-hidden />
             {weekStarts.map((w) => (
-              <div key={w} className="numeral pb-0.5 text-center text-[10px] text-faint">
+              <div key={w} className="numeral pb-0.5 text-center text-[10px] text-dust">
                 {weekLabel(w)}
               </div>
             ))}
@@ -118,7 +118,7 @@ function Cell({
 
   if (value < band.low) {
     return (
-      <div className={`${base} bg-raised text-faint`} title={title}>
+      <div className={`${base} bg-raised text-dust`} title={title}>
         {label}
       </div>
     )

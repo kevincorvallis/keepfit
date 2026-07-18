@@ -1,8 +1,8 @@
 import type { Settings, Unit } from '../../lib/types'
-import { defaultBarWeight, defaultPlates, formatWeight } from '../../lib/plates'
+import { formatWeight } from '../../lib/plates'
 import { SectionCard } from './SectionCard'
 import { Stepper } from './Stepper'
-import { saveSettings } from './save'
+import { saveSettings, switchUnits } from './save'
 
 const UNITS: Unit[] = ['kg', 'lb']
 
@@ -11,11 +11,7 @@ export function UnitsBarSection({ settings }: { settings: Settings }) {
 
   const switchUnit = (unit: Unit) => {
     if (unit === settings.unit) return
-    void saveSettings(settings, {
-      unit,
-      barWeight: defaultBarWeight(unit),
-      plates: [...defaultPlates(unit)],
-    })
+    void switchUnits(settings.unit, unit)
   }
 
   return (
@@ -37,6 +33,7 @@ export function UnitsBarSection({ settings }: { settings: Settings }) {
         ))}
       </div>
       <p className="mt-3 text-sm text-plate-yellow">
+        Program increments and plates switch to {settings.unit === 'kg' ? 'lb' : 'kg'} steps.
         Logged workouts keep their numbers — they are not converted.
       </p>
 
@@ -45,7 +42,7 @@ export function UnitsBarSection({ settings }: { settings: Settings }) {
         <Stepper
           big
           value={settings.barWeight}
-          onChange={(barWeight) => void saveSettings(settings, { barWeight })}
+          onChange={(barWeight) => void saveSettings({ barWeight })}
           step={barStep}
           min={0}
           max={999}

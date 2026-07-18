@@ -7,8 +7,15 @@ import { saveSettings } from './save'
 export function VolumeBandsSection({ settings }: { settings: Settings }) {
   const bandFor = (m: MuscleGroup): VolumeBand => settings.volumeBands[m] ?? DEFAULT_VOLUME_BANDS[m]
 
-  const setBand = (m: MuscleGroup, band: VolumeBand) => {
-    void saveSettings(settings, { volumeBands: { ...settings.volumeBands, [m]: band } })
+  // Merge one edge of the band onto the CURRENT db row, so quick low+high
+  // edits on the same muscle can't clobber each other.
+  const setBandEdge = (m: MuscleGroup, edge: Partial<VolumeBand>) => {
+    void saveSettings((current) => ({
+      volumeBands: {
+        ...current.volumeBands,
+        [m]: { ...(current.volumeBands[m] ?? DEFAULT_VOLUME_BANDS[m]), ...edge },
+      },
+    }))
   }
 
   return (
@@ -25,7 +32,7 @@ export function VolumeBandsSection({ settings }: { settings: Settings }) {
               <div className="flex items-center gap-1.5">
                 <Stepper
                   value={band.low}
-                  onChange={(low) => setBand(m, { ...band, low })}
+                  onChange={(low) => setBandEdge(m, { low })}
                   step={1}
                   min={0}
                   max={band.high}
@@ -36,7 +43,7 @@ export function VolumeBandsSection({ settings }: { settings: Settings }) {
                 </span>
                 <Stepper
                   value={band.high}
-                  onChange={(high) => setBand(m, { ...band, high })}
+                  onChange={(high) => setBandEdge(m, { high })}
                   step={1}
                   min={band.low}
                   max={30}

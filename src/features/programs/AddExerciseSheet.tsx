@@ -77,7 +77,7 @@ export function AddExerciseSheet({
               className="flex min-h-12 w-full items-center justify-between gap-3 border-t border-line px-1 text-left active:bg-raised"
             >
               <span className="font-medium">{e.name}</span>
-              <span className="shrink-0 text-xs text-faint">
+              <span className="shrink-0 text-xs text-dust">
                 {e.isCustom ? 'custom' : e.equipment}
               </span>
             </button>

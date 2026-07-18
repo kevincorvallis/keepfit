@@ -86,6 +86,19 @@ export function nextUnloggedRow(entries: SessionEntry[]): DisplayRow | undefined
 }
 
 /**
+ * The next unlogged row as it will stand once `entryId` logs one more
+ * working set — computed before the write lands, for rest-timer decisions.
+ */
+export function nextRowAfterLogging(
+  entries: SessionEntry[],
+  entryId: string,
+): DisplayRow | undefined {
+  const counts = new Map(entries.map((e) => [e.id, workingSets(e).length]))
+  counts.set(entryId, (counts.get(entryId) ?? 0) + 1)
+  return orderedRows(entries).find((r) => r.setIndex >= (counts.get(r.entry.id) ?? 0))
+}
+
+/**
  * PR flags per working set: a set is a PR when its e1RM beats both the
  * historical best and every earlier set this session. No history → no PRs.
  */

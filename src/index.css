@@ -19,7 +19,8 @@
   --color-faint: #6e675c;
 
   /* IPF competition plate palette — functional color, not decoration */
-  --color-plate-red: #e0483e; /* 25 kg — primary action, PRs */
+  --color-plate-red: #e0483e; /* 25 kg — accents, PRs */
+  --color-plate-red-action: #b5342b; /* darker fill for CTAs: 5.2:1 with chalk (AA) */
   --color-plate-blue: #3e66c4; /* 20 kg */
   --color-plate-yellow: #e3b341; /* 15 kg — warnings, holds */
   --color-plate-green: #4cae73; /* 10 kg — completed, success */

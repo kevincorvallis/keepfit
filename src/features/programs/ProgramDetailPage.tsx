@@ -41,6 +41,7 @@ export default function ProgramDetailPage() {
   const [confirming, setConfirming] = useState<Confirming>(null)
   const [editing, setEditing] = useState<{ dayId: string; slotId: string } | null>(null)
   const [addingToDay, setAddingToDay] = useState<string | null>(null)
+  const [starting, setStarting] = useState(false)
 
   if (!result) return null
   const program = result.program
@@ -71,9 +72,18 @@ export default function ProgramDetailPage() {
     navigate(`/programs/${copy.id}`)
   }
 
+  // startSessionFromDay itself refuses to create a second unfinished
+  // session (it returns the running one), so a stale tap here can never
+  // orphan a live workout — the busy flag just stops double-submits.
   const startDay = async (day: ProgramDay) => {
-    await startSessionFromDay(program, day)
-    navigate('/')
+    if (starting) return
+    setStarting(true)
+    try {
+      await startSessionFromDay(program, day)
+      navigate('/')
+    } finally {
+      setStarting(false)
+    }
   }
 
   const confirmDelete = async () => {
@@ -104,12 +114,14 @@ export default function ProgramDetailPage() {
         >
           <ChevronLeft size={18} aria-hidden /> Programs
         </Link>
-        <InlineText
-          label="Program name"
-          value={program.name}
-          onSave={(name) => save({ ...program, name })}
-          className="font-display text-4xl font-bold tracking-tight uppercase"
-        />
+        <h1>
+          <InlineText
+            label="Program name"
+            value={program.name}
+            onSave={(name) => save({ ...program, name })}
+            className="font-display text-4xl font-bold tracking-tight uppercase"
+          />
+        </h1>
         <InlineText
           label="Program description"
           value={program.description ?? ''}
@@ -173,7 +185,7 @@ export default function ProgramDetailPage() {
             <Button
               variant="primary"
               big
-              disabled={day.slots.length === 0}
+              disabled={day.slots.length === 0 || starting}
               onClick={() => void startDay(day)}
             >
               Start this day

@@ -47,13 +47,21 @@ export function PlatesSection({ settings }: { settings: Settings }) {
   const standard = defaultPlates(settings.unit)
   const custom = sortedDesc(settings.plates.filter((p) => !standard.includes(p)))
 
-  const persist = (plates: number[]) => {
-    void saveSettings(settings, { plates: sortedDesc(plates) })
+  // Functional patches: each write computes from the CURRENT db row, so two
+  // quick chip taps (or a chip tap + another settings change) can't revert
+  // each other via a stale render snapshot.
+  const toggleStandard = (p: number) => {
+    void saveSettings((current) => ({
+      plates: sortedDesc(
+        current.plates.includes(p)
+          ? current.plates.filter((x) => x !== p)
+          : [...current.plates, p],
+      ),
+    }))
   }
 
-  const toggleStandard = (p: number) => {
-    const on = settings.plates.includes(p)
-    persist(on ? settings.plates.filter((x) => x !== p) : [...settings.plates, p])
+  const removePlate = (p: number) => {
+    void saveSettings((current) => ({ plates: sortedDesc(current.plates.filter((x) => x !== p)) }))
   }
 
   const addCustom = () => {
@@ -66,7 +74,9 @@ export function PlatesSection({ settings }: { settings: Settings }) {
       setError('That plate is already in your rack.')
       return
     }
-    persist([...settings.plates, value])
+    void saveSettings((current) => ({
+      plates: sortedDesc(current.plates.includes(value) ? current.plates : [...current.plates, value]),
+    }))
     setDraft('')
     setError(null)
     setAdding(false)
@@ -89,7 +99,7 @@ export function PlatesSection({ settings }: { settings: Settings }) {
               aria-label={`${formatPlate(p)} ${settings.unit} plate`}
               onClick={() => toggleStandard(p)}
               className={`numeral font-display min-h-12 min-w-16 rounded-full border px-4 text-lg font-semibold transition-colors select-none ${
-                on ? 'border-transparent' : 'border-line bg-raised text-faint'
+                on ? 'border-transparent' : 'border-line bg-raised text-dust'
               }`}
               style={on && colors ? { backgroundColor: colors.bg, color: colors.fg } : undefined}
             >
@@ -102,7 +112,7 @@ export function PlatesSection({ settings }: { settings: Settings }) {
             key={p}
             type="button"
             aria-label={`Remove ${formatPlate(p)} ${settings.unit} plate`}
-            onClick={() => persist(settings.plates.filter((x) => x !== p))}
+            onClick={() => removePlate(p)}
             className="numeral font-display inline-flex min-h-12 items-center gap-1.5 rounded-full border border-line bg-raised px-4 text-lg font-semibold text-chalk transition-colors select-none active:bg-line/60"
           >
             {formatPlate(p)}
@@ -148,7 +158,7 @@ export function PlatesSection({ settings }: { settings: Settings }) {
           <button
             type="button"
             onClick={addCustom}
-            className="min-h-12 rounded-card bg-plate-red px-4 font-semibold text-chalk transition-colors select-none active:brightness-110"
+            className="min-h-12 rounded-card bg-plate-red-action px-4 font-semibold text-chalk transition-colors select-none active:brightness-110"
           >
             Add
           </button>

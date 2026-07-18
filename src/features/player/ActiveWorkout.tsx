@@ -24,6 +24,7 @@ import { RestTimerBar, type NextSetPreview } from './RestTimerBar'
 import {
   blocksOf,
   formatClock,
+  nextRowAfterLogging,
   nextUnloggedRow,
   prefillReps,
   prefillWeight,
@@ -34,6 +35,9 @@ import { primeAudio } from './sound'
 
 const NOTIFY_ASKED_KEY = 'keepfit:notification-asked'
 
+/** Short breather between paired exercises inside a superset round. */
+const SUPERSET_TRANSITION_SECONDS = 15
+
 interface RestTimer {
   endsAt: number
   total: number
@@ -43,7 +47,7 @@ interface RestTimer {
 export default function ActiveWorkout({ session }: { session: Session }) {
   const navigate = useNavigate()
   const settings = useSettings()
-  const finished = useFinishedSessions()
+  const finished = useFinishedSessions() ?? []
   const exerciseMap = useExerciseMap()
   const exercises = useExercises()
 
@@ -112,8 +116,30 @@ export default function ActiveWorkout({ session }: { session: Session }) {
     logLock.current = true
     try {
       if (soundOn) primeAudio()
+      // Inside a superset round the lifter moves straight to the paired
+      // exercise: short transition timer. The block's full rest fires only
+      // after the last exercise of the round.
+      const roundIndex = workingSets(entry).length
+      const upcoming = nextRowAfterLogging(session.entries, entry.id)
+      const withinRound =
+        entry.supersetGroup !== undefined &&
+        upcoming !== undefined &&
+        upcoming.entry.id !== entry.id &&
+        upcoming.entry.supersetGroup === entry.supersetGroup &&
+        upcoming.setIndex === roundIndex
+      const restSeconds = withinRound ? SUPERSET_TRANSITION_SECONDS : entry.restSeconds
       await logSet(session.id, entry.id, { weight, reps, rir, isWarmup: false })
-      setTimer({ endsAt: Date.now() + entry.restSeconds * 1000, total: entry.restSeconds })
+      setTimer({ endsAt: Date.now() + restSeconds * 1000, total: restSeconds })
+    } finally {
+      logLock.current = false
+    }
+  }
+
+  async function handleLogWarmup(entry: SessionEntry, weight: number, reps: number) {
+    if (logLock.current) return
+    logLock.current = true
+    try {
+      await logSet(session.id, entry.id, { weight, reps, isWarmup: true })
     } finally {
       logLock.current = false
     }
@@ -132,8 +158,9 @@ export default function ActiveWorkout({ session }: { session: Session }) {
     if (busy) return
     setBusy(true)
     try {
-      await finishSession(session.id)
-      navigate(`/history/${session.id}`)
+      const kept = await finishSession(session.id)
+      // An all-empty workout is discarded rather than saved — nothing to show.
+      navigate(kept ? `/history/${session.id}` : '/')
     } finally {
       setBusy(false)
     }
@@ -160,7 +187,7 @@ export default function ActiveWorkout({ session }: { session: Session }) {
       void handleLogWorking(entry, weight, reps)
     },
     onLogWarmup: (entry, weight, reps) => {
-      void logSet(session.id, entry.id, { weight, reps, isWarmup: true })
+      void handleLogWarmup(entry, weight, reps)
     },
     onUndoWarmup: (entry, set) => {
       void removeSet(session.id, entry.id, set.id)
@@ -193,7 +220,7 @@ export default function ActiveWorkout({ session }: { session: Session }) {
             <button
               type="button"
               onClick={() => setDiscardOpen(true)}
-              aria-label="Workout options"
+              aria-label="Discard workout"
               className="flex h-12 w-12 items-center justify-center rounded-card text-dust active:text-chalk"
             >
               <EllipsisVertical size={20} aria-hidden />

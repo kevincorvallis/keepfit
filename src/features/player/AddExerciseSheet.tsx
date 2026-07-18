@@ -65,7 +65,7 @@ export function AddExerciseSheet({
                 className="flex min-h-12 w-full items-center justify-between gap-3 text-left active:bg-raised"
               >
                 <span className="min-w-0 truncate">{exercise.name}</span>
-                <span className="shrink-0 text-xs text-faint">
+                <span className="shrink-0 text-xs text-dust">
                   {exercise.primaryMuscles.join(', ')}
                 </span>
               </button>

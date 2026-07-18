@@ -10,6 +10,9 @@ export default function StatsPage() {
   const settings = useSettings()
   const unit = settings?.unit ?? 'kg'
 
+  // Still loading — don't flash the "No data yet" empty state.
+  if (sessions === undefined) return <PageHeader sub="Analytics" title="Stats" />
+
   return (
     <div>
       <PageHeader sub="Analytics" title="Stats" />

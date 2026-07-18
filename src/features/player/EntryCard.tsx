@@ -136,16 +136,23 @@ function EntryHeader({
 function EntryIntro({ entry, ctx }: { entry: SessionEntry; ctx: PlayerCtx }) {
   const exercise = ctx.exerciseMap.get(entry.exerciseId)
   const name = exercise?.name ?? 'Exercise'
+  const equipment = exercise?.equipment ?? 'machine'
   const weight = prefillWeight(entry)
-  const showBar = exercise?.equipment === 'barbell' && weight > ctx.barWeight
-  const plan = showBar
-    ? warmupPlan({
-        workingWeight: weight,
-        equipment: 'barbell',
-        barWeight: ctx.barWeight,
-        roundTo: entry.progression?.roundTo ?? smallestBarbellStep(ctx.plates),
-      })
-    : []
+  const showBar = equipment === 'barbell' && weight > ctx.barWeight
+  // The warm-up plan is frozen for the session: it derives from the entry's
+  // target (or the first logged working set), never the latest set, so
+  // logged warm-up marks can't migrate onto regenerated rows mid-session.
+  const targetWeight = entry.target?.weight ?? 0
+  const planWeight = targetWeight > 0 ? targetWeight : (workingSets(entry)[0]?.weight ?? 0)
+  const plan =
+    equipment === 'bodyweight'
+      ? []
+      : warmupPlan({
+          workingWeight: planWeight,
+          equipment,
+          barWeight: ctx.barWeight,
+          roundTo: entry.progression?.roundTo ?? smallestBarbellStep(ctx.plates),
+        })
 
   return (
     <div>
@@ -170,6 +177,7 @@ function EntryIntro({ entry, ctx }: { entry: SessionEntry; ctx: PlayerCtx }) {
           plan={plan}
           loggedWarmups={warmupSets(entry)}
           unit={ctx.unit}
+          barbell={equipment === 'barbell'}
           barWeight={ctx.barWeight}
           plates={ctx.plates}
           onLog={(w, r) => ctx.onLogWarmup(entry, w, r)}
@@ -196,6 +204,10 @@ function TicketRow({
   const flags = prFlags(ws, ctx.baselines.get(entry.exerciseId) ?? 0)
   const weight = prefillWeight(entry)
   const bodyweight = ctx.exerciseMap.get(entry.exerciseId)?.equipment === 'bodyweight'
+  // A newly logged set always lands on the first unlogged index, so the
+  // adjust sheet may only open for logged rows plus that next row —
+  // otherwise "set 3" in the title would silently fill set 1's ticket.
+  const canOpen = logged !== undefined || index === ws.length
   return (
     <SetTicket
       setNumber={index + 1}
@@ -208,7 +220,9 @@ function TicketRow({
       bodyweight={bodyweight}
       weightInput={logged === undefined && index === ws.length && weight === 0 && !bodyweight}
       onLog={(w, r) => ctx.onLogWorking(entry, w, r)}
-      onOpen={(d) => ctx.onOpenAdjust(entry, index, d)}
+      onOpen={(d) => {
+        if (canOpen) ctx.onOpenAdjust(entry, index, d)
+      }}
     />
   )
 }

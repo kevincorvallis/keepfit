@@ -45,7 +45,8 @@ export function FinishSheet({
       </dl>
       {sets === 0 && (
         <p className="mt-3 text-sm text-dust">
-          Nothing is logged yet — exercises without sets are dropped when you finish.
+          Nothing is logged yet — finishing now discards this workout instead of saving an empty
+          session.
         </p>
       )}
       <div className="mt-5 space-y-2">

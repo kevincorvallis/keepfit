@@ -32,7 +32,7 @@ export default function ProgramsPage() {
         }
       />
 
-      {programs.length === 0 ? (
+      {programs === undefined ? null : programs.length === 0 ? (
         <EmptyState
           title="No programs"
           body="Create a program to plan your training days."

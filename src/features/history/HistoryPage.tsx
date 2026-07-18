@@ -33,6 +33,9 @@ export default function HistoryPage() {
   const sessions = useFinishedSessions()
   const unit = useSettings()?.unit ?? 'kg'
 
+  // Still loading — don't flash the "No workouts yet" empty state.
+  if (sessions === undefined) return <PageHeader sub="Log" title="History" />
+
   const ordered = [...sessions].sort((a, b) => b.startedAt - a.startedAt)
   const prCounts = prCountBySession(sessions)
 

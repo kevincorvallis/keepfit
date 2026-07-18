@@ -83,6 +83,11 @@ export function RestTimerBar({
             done ? 'border-plate-green/60 bg-surface' : 'border-line bg-raised'
           }`}
         >
+          {/* Screen-reader announcement when rest ends — the visual flip to
+              "Go" is otherwise silent (role=timer is intentionally not live). */}
+          <span role="status" className="sr-only">
+            {done ? (nextLabel ? `Rest done — next up ${nextLabel}` : 'Rest done') : ''}
+          </span>
           <div className="flex items-center gap-3">
             <span
               role="timer"
@@ -125,7 +130,7 @@ export function RestTimerBar({
           </div>
           {next && (
             <div className="mt-2">
-              <p className="text-xs text-faint">
+              <p className="text-xs text-dust">
                 Next up · <span className="text-dust">{next.name}</span>
                 {next.weight > 0 && (
                   <>

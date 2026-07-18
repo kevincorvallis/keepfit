@@ -12,7 +12,10 @@ import { DeloadBanner } from './DeloadBanner'
  */
 export default function TrainPage() {
   const active = useActiveSession()
-  if (active) return <ActiveWorkout session={active} />
+  // undefined = query still loading: render neither view, so a reload
+  // mid-workout can't flash tappable Start buttons over the live session.
+  if (active === undefined) return null
+  if (active) return <ActiveWorkout key={active.id} session={active} />
   return <StartHome />
 }
 
@@ -46,7 +49,7 @@ function StartHome() {
     <div>
       <PageHeader sub="KeepFit" title="Train" />
       <DeloadBanner />
-      {programs.length === 0 ? (
+      {programs === undefined ? null : programs.length === 0 ? (
         <EmptyState
           title="No programs yet"
           body="Build one in the programs tab, or start an empty workout and log as you go."

@@ -136,6 +136,50 @@ describe('parseImport rejections', () => {
     const { progressionState: _dropped, ...partial } = { ...makeBundle(), schemaVersion: 1 }
     expect(() => parseImport(JSON.stringify(partial))).toThrowError('Backup is missing "progressionState".')
   })
+
+  it('rejects a bundle whose collections are not arrays (truncated/hand-edited file)', () => {
+    const bad = JSON.stringify({
+      schemaVersion: 1,
+      settings: {},
+      exercises: [],
+      programs: [],
+      sessions: {}, // object, not array — used to slip through and crash the UI
+      progressionState: [],
+    })
+    expect(() => parseImport(bad)).toThrowError('Backup is corrupt — "sessions" is not a list.')
+  })
+
+  it('rejects settings that are not an object', () => {
+    const bad = JSON.stringify({ ...makeBundle(), schemaVersion: 1, settings: [] })
+    expect(() => parseImport(bad)).toThrowError('"settings" is not an object')
+  })
+
+  it('rejects sessions lacking id, startedAt or entries', () => {
+    const bad = JSON.stringify({
+      ...makeBundle(),
+      schemaVersion: 1,
+      sessions: [{ id: 'sess-x', startedAt: 1 }], // no entries array
+    })
+    expect(() => parseImport(bad)).toThrowError('a session is malformed')
+  })
+
+  it('rejects session entries lacking a sets array', () => {
+    const bad = JSON.stringify({
+      ...makeBundle(),
+      schemaVersion: 1,
+      sessions: [{ id: 'sess-x', startedAt: 1, entries: [{ exerciseId: 'squat' }] }],
+    })
+    expect(() => parseImport(bad)).toThrowError('a session entry is malformed')
+  })
+
+  it('rejects programs lacking a days array', () => {
+    const bad = JSON.stringify({
+      ...makeBundle(),
+      schemaVersion: 1,
+      programs: [{ id: 'prog-x', name: 'broken' }],
+    })
+    expect(() => parseImport(bad)).toThrowError('a program is malformed')
+  })
 })
 
 describe('sessionsToCsv', () => {

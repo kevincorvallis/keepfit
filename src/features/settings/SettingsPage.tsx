@@ -16,7 +16,7 @@ function RestTimerSection({ settings }: { settings: Settings }) {
         type="button"
         role="switch"
         aria-checked={on}
-        onClick={() => void saveSettings(settings, { restTimerSound: !on })}
+        onClick={() => void saveSettings((current) => ({ restTimerSound: !current.restTimerSound }))}
         className="flex min-h-12 w-full items-center justify-between gap-3 select-none"
       >
         <span className="text-left">

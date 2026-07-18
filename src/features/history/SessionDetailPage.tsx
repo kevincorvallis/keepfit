@@ -92,8 +92,8 @@ export default function SessionDetailPage() {
 
       <Sheet open={confirming} onClose={() => setConfirming(false)} title="Delete session">
         <p className="text-sm text-dust">
-          This removes the session from your log permanently. Progression suggestions are not
-          affected.
+          This removes the session from your log permanently. Future suggestions are computed
+          from your remaining log, so they may change.
         </p>
         <div className="mt-5 grid gap-3">
           <Button variant="danger" big onClick={handleDelete}>
@@ -162,7 +162,7 @@ function EntryCard({ entry, name, unit }: { entry: SessionEntry; name: string; u
           {rows.map(({ set, label, e1rm }) => (
             <tr
               key={set.id}
-              className={`border-t border-line/60 ${set.isWarmup ? 'text-faint' : ''}`}
+              className={`border-t border-line/60 ${set.isWarmup ? 'text-dust' : ''}`}
             >
               <td className="py-1.5 text-left">{label}</td>
               <td className="py-1.5 text-right">{formatNumber(set.weight)}</td>

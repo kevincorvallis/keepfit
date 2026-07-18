@@ -59,8 +59,13 @@ export function PlateBar({
   const sleeveStart = 42
 
   return (
-    <div aria-label={`Load ${formatPlates(perSide)} per side for ${formatWeight(achieved, unit)}`}>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-hidden>
+    // role="img" on the labelled wrapper: an aria-label on a generic div is
+    // ignored by most screen readers, which left compact mode unreadable.
+    <div
+      role="img"
+      aria-label={`Load ${formatPlates(perSide)} per side for ${formatWeight(achieved, unit)}`}
+    >
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" aria-hidden>
         {/* bar */}
         <rect x="0" y={midY - 3} width={width} height="6" rx="3" fill="#4a453d" />
         {/* collar face */}

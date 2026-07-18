@@ -14,6 +14,10 @@ export function toJson(bundle: Omit<ExportBundle, 'schemaVersion'>): string {
   return JSON.stringify({ schemaVersion: 1, ...bundle }, null, 2)
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /** Full-fidelity import: validates shape, throws with a readable message. */
 export function parseImport(json: string): ExportBundle {
   let data: unknown
@@ -28,6 +32,32 @@ export function parseImport(json: string): ExportBundle {
   }
   for (const key of ['settings', 'exercises', 'programs', 'sessions', 'progressionState'] as const) {
     if (bundle[key] === undefined) throw new Error(`Backup is missing "${key}".`)
+  }
+  if (!isRecord(bundle.settings)) {
+    throw new Error('Backup is corrupt — "settings" is not an object.')
+  }
+  for (const key of ['exercises', 'programs', 'sessions', 'progressionState'] as const) {
+    if (!Array.isArray(bundle[key])) throw new Error(`Backup is corrupt — "${key}" is not a list.`)
+  }
+  for (const program of bundle.programs as unknown[]) {
+    if (!isRecord(program) || typeof program.id !== 'string' || !Array.isArray(program.days)) {
+      throw new Error('Backup is corrupt — a program is malformed.')
+    }
+  }
+  for (const session of bundle.sessions as unknown[]) {
+    if (
+      !isRecord(session) ||
+      typeof session.id !== 'string' ||
+      typeof session.startedAt !== 'number' ||
+      !Array.isArray(session.entries)
+    ) {
+      throw new Error('Backup is corrupt — a session is malformed.')
+    }
+    for (const entry of session.entries as unknown[]) {
+      if (!isRecord(entry) || typeof entry.exerciseId !== 'string' || !Array.isArray(entry.sets)) {
+        throw new Error('Backup is corrupt — a session entry is malformed.')
+      }
+    }
   }
   return bundle as ExportBundle
 }

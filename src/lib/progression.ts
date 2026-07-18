@@ -19,14 +19,61 @@ export interface SuggestResult {
 const DAY = 86_400_000
 
 /**
+ * Pick the history point progression decisions anchor on. Normally the most
+ * recent session — but a trailing light session (top weight far below the
+ * recent working tier, e.g. a technique/pump day) must not collapse the
+ * progression base, so we walk back to the most recent session at the tier.
+ * Only sessions from the last 14 days can hold the tier, so deloads and
+ * post-layoff rebuilds still move the baseline down. The cutoff allows a
+ * full deload (fraction plus one rounding step) below the recent max.
+ */
+function anchorIndex(history: HistoryPoint[], config: ProgressionConfig, now: number): number {
+  const last = history.length - 1
+  let recentMax = 0
+  for (let i = last; i >= 0; i--) {
+    if (now - history[i].date > 14 * DAY) break
+    recentMax = Math.max(recentMax, topWeight(history[i].sets))
+  }
+  const cutoff = recentMax * (1 - config.deloadFraction) - config.roundTo
+  for (let i = last; i >= 0; i--) {
+    if (now - history[i].date > 14 * DAY) break
+    if (topWeight(history[i].sets) >= cutoff - 1e-9) return i
+  }
+  return last
+}
+
+/**
+ * True when the engine would base its next suggestion on the most recent
+ * history point. When false (the latest session is a light outlier), that
+ * session carries no progression signal and must not advance stall state.
+ */
+export function isAnchorSession(
+  history: HistoryPoint[],
+  config: ProgressionConfig,
+  now: number,
+): boolean {
+  const points = (history ?? []).filter((h) => h.sets.length > 0).sort((a, b) => a.date - b.date)
+  if (points.length === 0) return false
+  return anchorIndex(points, config, now) === points.length - 1
+}
+
+/**
  * Pure, total progression engine: (history, config) → explained target.
  * Never throws — malformed history degrades to a "repeat" suggestion.
+ *
+ * Contract: `stallCount` counts consecutive stalls BEFORE the anchor (most
+ * recent meaningful) history point; the engine evaluates that point once and
+ * returns `nextStallCount` including it.
  */
 export function suggestNext(args: SuggestArgs): SuggestResult {
   const { config, unit, now, plannedSets } = args
-  const history = (args.history ?? [])
+  const fullHistory = (args.history ?? [])
     .filter((h) => h.sets.length > 0)
     .sort((a, b) => a.date - b.date)
+  const history =
+    fullHistory.length === 0
+      ? fullHistory
+      : fullHistory.slice(0, anchorIndex(fullHistory, config, now) + 1)
   const stallCount = Math.max(0, args.stallCount ?? 0)
 
   if (history.length === 0) {
@@ -78,6 +125,20 @@ export function suggestNext(args: SuggestArgs): SuggestResult {
       },
       nextStallCount: 0,
     }
+  }
+
+  // An incomplete session (fewer performed sets than planned) is not
+  // evidence either way — repeat it rather than progressing off a third
+  // of the prescribed volume, and leave the stall count alone.
+  if (last.sets.length < plannedSets) {
+    return result(
+      lastWeight,
+      config,
+      plannedSets,
+      'hold',
+      `You logged ${last.sets.length} of ${plannedSets} planned sets last time — repeat the weight and complete them all.`,
+      stallCount,
+    )
   }
 
   return config.mode === 'linear'
@@ -144,7 +205,8 @@ function double(
   const totalReps = lastSets.reduce((a, s) => a + s.reps, 0)
 
   // RIR is only trusted near failure (0–3 band, Remmert/Zourdos 2023).
-  const rirSets = lastSets.filter((s) => s.rir !== undefined && s.rir >= 0 && s.rir <= 4)
+  // RIR 4 stays loggable but never feeds engine decisions.
+  const rirSets = lastSets.filter((s) => s.rir !== undefined && s.rir >= 0 && s.rir <= 3)
   const avgRir = rirSets.length >= Math.ceil(lastSets.length / 2)
     ? rirSets.reduce((a, s) => a + (s.rir ?? 0), 0) / rirSets.length
     : undefined
@@ -177,10 +239,11 @@ function double(
   }
 
   if (anyBelowMin) {
-    // Stopped early with plenty in reserve — not a true stall.
+    // Stopped early with plenty in reserve — not a true stall. Only the
+    // trusted RIR band (0–3) counts as evidence here too.
     const stoppedEarly = lastSets
       .filter((s) => s.reps < config.minReps)
-      .every((s) => s.rir !== undefined && s.rir >= 2)
+      .every((s) => s.rir !== undefined && s.rir >= 2 && s.rir <= 3)
     if (stoppedEarly) {
       return result(
         lastWeight,
@@ -250,6 +313,10 @@ function double(
 
 function previousTotalAtWeight(history: HistoryPoint[], weight: number): number | undefined {
   for (let i = history.length - 2; i >= 0; i--) {
+    // A heavier intervening session means this weight was reached by a
+    // deload or reset — older totals at it are a stale baseline, not a
+    // target. Treat the current session as a fresh start instead.
+    if (topWeight(history[i].sets) > weight + 1e-9) return undefined
     const sets = history[i].sets.filter((s) => s.weight === weight)
     if (sets.length > 0) return sets.reduce((a, s) => a + s.reps, 0)
   }
@@ -286,6 +353,26 @@ function result(
     },
     nextStallCount,
   }
+}
+
+const KG_PER_LB = 0.45359237
+
+/**
+ * Convert a config's unit-bearing fields (increment, roundTo) between units,
+ * rounding to the unit's micro plate pair (2×1.25 kg / 2×2.5 lb) so every
+ * default maps onto its counterpart (2.5 kg ↔ 5 lb, 2 kg ↔ 5 lb,
+ * 1.25 kg ↔ 2.5 lb) and custom values land on loadable steps.
+ */
+export function convertProgressionUnits(
+  config: ProgressionConfig,
+  from: Unit,
+  to: Unit,
+): ProgressionConfig {
+  if (from === to) return config
+  const factor = to === 'kg' ? KG_PER_LB : 1 / KG_PER_LB
+  const step = to === 'kg' ? 1.25 : 2.5
+  const convert = (v: number) => Math.max(step, roundToStep(v * factor, step))
+  return { ...config, increment: convert(config.increment), roundTo: convert(config.roundTo) }
 }
 
 /** Evidence-based defaults by equipment (see design doc). */

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import { Button, Sheet } from '../../app/ui'
@@ -20,10 +21,20 @@ export function Stepper({
   format?: (v: number) => string
   onChange: (v: number) => void
 }) {
+  // Optimistic local value so rapid taps never compute from a stale,
+  // liveQuery-lagged prop and silently drop increments.
+  const [local, setLocal] = useState(value)
+  useEffect(() => {
+    setLocal(value)
+  }, [value])
+
   const nudge = (dir: 1 | -1) => {
-    const next = Math.round((value + dir * step) * 1000) / 1000
-    onChange(Math.min(max, Math.max(min, next)))
+    const raw = Math.round((local + dir * step) * 1000) / 1000
+    const next = Math.min(max, Math.max(min, raw))
+    setLocal(next)
+    onChange(next)
   }
+  const formatted = format ? format(local) : String(local)
   return (
     <div className="flex items-center justify-between gap-3 py-1">
       <span className="text-sm font-medium text-dust">{label}</span>
@@ -31,19 +42,24 @@ export function Stepper({
         <button
           type="button"
           aria-label={`Decrease ${label.toLowerCase()}`}
-          disabled={value <= min}
+          disabled={local <= min}
           onClick={() => nudge(-1)}
           className="flex h-12 w-12 items-center justify-center rounded-card border border-line bg-raised text-chalk active:bg-line/60 disabled:opacity-40"
         >
           <Minus size={18} aria-hidden />
         </button>
-        <span className="numeral font-display min-w-16 px-1 text-center text-2xl font-semibold">
-          {format ? format(value) : value}
+        {/* Live readout so screen readers hear each new value after a tap. */}
+        <span
+          role="status"
+          aria-label={`${label} ${formatted}`}
+          className="numeral font-display min-w-16 px-1 text-center text-2xl font-semibold"
+        >
+          {formatted}
         </span>
         <button
           type="button"
           aria-label={`Increase ${label.toLowerCase()}`}
-          disabled={value >= max}
+          disabled={local >= max}
           onClick={() => nudge(1)}
           className="flex h-12 w-12 items-center justify-center rounded-card border border-line bg-raised text-chalk active:bg-line/60 disabled:opacity-40"
         >
@@ -111,8 +127,9 @@ export function Chip({
 }
 
 /**
- * Tap-to-edit text that renders as the surrounding typography.
- * Saves on blur; an emptied value reverts unless allowEmpty.
+ * Tap-to-edit text that renders as the surrounding typography, with a
+ * dashed underline as the edit affordance. Saves on blur or Enter; Escape
+ * reverts to the original value; an emptied value reverts unless allowEmpty.
  */
 export function InlineText({
   value,
@@ -135,7 +152,7 @@ export function InlineText({
       defaultValue={value}
       aria-label={label}
       placeholder={placeholder}
-      className={`w-full min-w-0 rounded-sm bg-transparent placeholder:text-faint ${className}`}
+      className={`w-full min-w-0 rounded-sm border-b border-dashed border-line/70 bg-transparent placeholder:text-faint focus:border-dust ${className}`}
       onBlur={(e) => {
         const next = e.currentTarget.value.trim()
         if (next === value) return
@@ -147,6 +164,11 @@ export function InlineText({
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur()
+        if (e.key === 'Escape') {
+          // Cancel the edit: restore the saved value, then leave the field.
+          e.currentTarget.value = value
+          e.currentTarget.blur()
+        }
       }}
     />
   )

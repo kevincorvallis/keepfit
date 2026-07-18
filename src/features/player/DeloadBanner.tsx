@@ -14,8 +14,8 @@ const DAY = 86_400_000
  * sessionStorage only — it comes back next visit if the signals persist.
  */
 export function DeloadBanner() {
-  const finished = useFinishedSessions()
-  const programs = usePrograms()
+  const finished = useFinishedSessions() ?? []
+  const programs = usePrograms() ?? []
   const exerciseMap = useExerciseMap()
   const progressionStates = useLiveQuery(() => db.progressionState.toArray()) ?? []
   const [dismissed, setDismissed] = useState(() => {

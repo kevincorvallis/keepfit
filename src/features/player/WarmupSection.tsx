@@ -14,6 +14,7 @@ export function WarmupSection({
   plan,
   loggedWarmups,
   unit,
+  barbell,
   barWeight,
   plates,
   onLog,
@@ -22,13 +23,27 @@ export function WarmupSection({
   plan: WarmupSet[]
   loggedWarmups: LoggedSet[]
   unit: Unit
+  /** Only barbell rows render a plate loadout. */
+  barbell: boolean
   barWeight: number
   plates: number[]
   onLog: (weight: number, reps: number) => void
   onUndo: (set: LoggedSet) => void
 }) {
   const [open, setOpen] = useState(false)
-  const done = Math.min(loggedWarmups.length, plan.length)
+
+  // Match logged warm-ups to plan rows by weight, consuming each logged set
+  // at most once — never by array position, so skipping the empty bar and
+  // tapping a later row lights (and undoes) exactly that row.
+  const claimed = new Set<string>()
+  const rowLogged = plan.map((w) => {
+    const match = loggedWarmups.find(
+      (s) => !claimed.has(s.id) && Math.abs(s.weight - w.weight) < 1e-9,
+    )
+    if (match) claimed.add(match.id)
+    return match
+  })
+  const done = rowLogged.filter((s) => s !== undefined).length
 
   return (
     <div className="mt-3 rounded-lg border border-line/70 bg-ink/40">
@@ -46,19 +61,21 @@ export function WarmupSection({
       {open && (
         <div className="space-y-1 px-3 pb-3">
           {plan.map((w, i) => {
-            const logged = loggedWarmups[i]
+            const logged = rowLogged[i]
             return (
               <div key={`${w.weight}-${i}`} className="flex items-center gap-3">
                 <span className="numeral w-16 shrink-0 text-lg">{formatWeight(w.weight, unit)}</span>
                 <span className="numeral w-8 shrink-0 text-sm text-dust">×{w.reps}</span>
                 <div className="min-w-0 flex-1">
-                  <PlateBar
-                    compact
-                    targetWeight={w.weight}
-                    barWeight={barWeight}
-                    plates={plates}
-                    unit={unit}
-                  />
+                  {barbell && (
+                    <PlateBar
+                      compact
+                      targetWeight={w.weight}
+                      barWeight={barWeight}
+                      plates={plates}
+                      unit={unit}
+                    />
+                  )}
                 </div>
                 <button
                   type="button"

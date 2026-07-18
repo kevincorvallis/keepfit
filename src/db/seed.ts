@@ -5,6 +5,7 @@ import type {
   Program,
   ProgramSlot,
   Settings,
+  Unit,
 } from '../lib/types'
 import { DEFAULT_VOLUME_BANDS } from '../lib/types'
 import { defaultProgression } from '../lib/progression'
@@ -82,6 +83,7 @@ export function seedExercises(): Exercise[] {
 }
 
 let slotCounter = 0
+let slotUnit: Unit = 'kg'
 function slot(
   exerciseId: string,
   sets: number,
@@ -98,7 +100,7 @@ function slot(
     sets,
     restSeconds: opts?.restSeconds ?? (equipment === 'barbell' ? 180 : 90),
     supersetGroup: opts?.supersetGroup,
-    progression: defaultProgression(equipment, 'kg', {
+    progression: defaultProgression(equipment, slotUnit, {
       mode: opts?.mode,
       isolation: opts?.isolation,
     }),
@@ -113,9 +115,11 @@ function inferEquipment(exerciseId: string): Equipment {
   return 'bodyweight'
 }
 
-export function seedPrograms(): Program[] {
+/** Program templates, with progression increments in the app's current unit. */
+export function seedPrograms(unit: Unit = 'kg'): Program[] {
   const createdAt = Date.parse('2026-01-01T00:00:00Z')
   slotCounter = 0
+  slotUnit = unit
   return [
     {
       id: 'tpl-starter-full-body',
