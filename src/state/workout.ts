@@ -31,7 +31,7 @@ export async function startSessionFromDay(program: Program, day: ProgramDay): Pr
     if (existing) return existing.id
 
     const settings = await db.settings.get('app')
-    const unit = settings?.unit ?? 'kg'
+    const unit = settings?.unit ?? 'lb'
     const sessions = await db.sessions.orderBy('startedAt').toArray()
     const now = Date.now()
 
@@ -149,7 +149,7 @@ async function programmedSlot(exerciseId: string) {
 export async function addEntry(sessionId: string, exerciseId: string): Promise<void> {
   const exercise: Exercise | undefined = await db.exercises.get(exerciseId)
   const settings = await db.settings.get('app')
-  const unit = settings?.unit ?? 'kg'
+  const unit = settings?.unit ?? 'lb'
   const sessions = await db.sessions.orderBy('startedAt').toArray()
   const state = await db.progressionState.get(exerciseId)
   const slot = await programmedSlot(exerciseId)
@@ -205,7 +205,7 @@ export async function removeEntry(sessionId: string, entryId: string): Promise<v
  */
 export async function finishSession(sessionId: string): Promise<boolean> {
   const settings = await db.settings.get('app')
-  const unit = settings?.unit ?? 'kg'
+  const unit = settings?.unit ?? 'lb'
 
   return db.transaction('rw', [db.sessions, db.progressionState], async () => {
     const session = await db.sessions.get(sessionId)

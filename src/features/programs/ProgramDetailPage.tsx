@@ -30,7 +30,7 @@ export default function ProgramDetailPage() {
   const navigate = useNavigate()
   const settings = useSettings()
   const exerciseMap = useExerciseMap()
-  const unit = settings?.unit ?? 'kg'
+  const unit = settings?.unit ?? 'lb'
 
   // Wrapped so undefined = still loading, { program: undefined } = missing.
   const result = useLiveQuery(

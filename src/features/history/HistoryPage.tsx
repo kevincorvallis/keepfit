@@ -31,7 +31,7 @@ function groupByMonth(sessions: Session[]): MonthGroup[] {
 
 export default function HistoryPage() {
   const sessions = useFinishedSessions()
-  const unit = useSettings()?.unit ?? 'kg'
+  const unit = useSettings()?.unit ?? 'lb'
 
   // Still loading — don't flash the "No workouts yet" empty state.
   if (sessions === undefined) return <PageHeader sub="Log" title="History" />

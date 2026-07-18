@@ -34,7 +34,7 @@ export async function ensureSeeded(): Promise<void> {
     }
     if ((await db.programs.count()) === 0) {
       // Seed program increments in whatever unit the app is running in.
-      const unit = (await db.settings.get('app'))?.unit ?? 'kg'
+      const unit = (await db.settings.get('app'))?.unit ?? 'lb'
       await db.programs.bulkPut(seedPrograms(unit))
     }
   })

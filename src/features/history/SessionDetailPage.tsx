@@ -17,7 +17,7 @@ function formatNumber(value: number): string {
 export default function SessionDetailPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
-  const unit = useSettings()?.unit ?? 'kg'
+  const unit = useSettings()?.unit ?? 'lb'
   const exercises = useExerciseMap()
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)

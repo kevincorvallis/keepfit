@@ -8,7 +8,7 @@ export default function StatsPage() {
   const sessions = useFinishedSessions()
   const exercises = useExerciseMap()
   const settings = useSettings()
-  const unit = settings?.unit ?? 'kg'
+  const unit = settings?.unit ?? 'lb'
 
   // Still loading — don't flash the "No data yet" empty state.
   if (sessions === undefined) return <PageHeader sub="Analytics" title="Stats" />

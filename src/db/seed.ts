@@ -9,7 +9,7 @@ import type {
 } from '../lib/types'
 import { DEFAULT_VOLUME_BANDS } from '../lib/types'
 import { defaultProgression } from '../lib/progression'
-import { DEFAULT_BAR_KG, DEFAULT_PLATES_KG } from '../lib/plates'
+import { DEFAULT_BAR_LB, DEFAULT_PLATES_LB } from '../lib/plates'
 
 function ex(
   id: string,
@@ -83,7 +83,7 @@ export function seedExercises(): Exercise[] {
 }
 
 let slotCounter = 0
-let slotUnit: Unit = 'kg'
+let slotUnit: Unit = 'lb'
 function slot(
   exerciseId: string,
   sets: number,
@@ -116,7 +116,7 @@ function inferEquipment(exerciseId: string): Equipment {
 }
 
 /** Program templates, with progression increments in the app's current unit. */
-export function seedPrograms(unit: Unit = 'kg'): Program[] {
+export function seedPrograms(unit: Unit = 'lb'): Program[] {
   const createdAt = Date.parse('2026-01-01T00:00:00Z')
   slotCounter = 0
   slotUnit = unit
@@ -258,9 +258,9 @@ export function seedPrograms(unit: Unit = 'kg'): Program[] {
 export function defaultSettings(): Settings {
   return {
     id: 'app',
-    unit: 'kg',
-    barWeight: DEFAULT_BAR_KG,
-    plates: DEFAULT_PLATES_KG,
+    unit: 'lb',
+    barWeight: DEFAULT_BAR_LB,
+    plates: DEFAULT_PLATES_LB,
     volumeBands: { ...DEFAULT_VOLUME_BANDS },
     restTimerSound: true,
   }

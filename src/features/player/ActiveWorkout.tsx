@@ -51,7 +51,7 @@ export default function ActiveWorkout({ session }: { session: Session }) {
   const exerciseMap = useExerciseMap()
   const exercises = useExercises()
 
-  const unit = settings?.unit ?? 'kg'
+  const unit = settings?.unit ?? 'lb'
   const barWeight = settings?.barWeight ?? defaultBarWeight(unit)
   const plates = settings?.plates ?? defaultPlates(unit)
   const soundOn = settings?.restTimerSound ?? true
