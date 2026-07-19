@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FileJson, FileSpreadsheet, Trash2, Upload } from 'lucide-react'
 import type { Settings } from '../../lib/types'
 import type { ExportBundle } from '../../lib/export'
@@ -6,6 +6,7 @@ import { parseImport, sessionsToCsv, toJson } from '../../lib/export'
 import { db, ensureSeeded } from '../../db/db'
 import { Button, Sheet } from '../../app/ui'
 import { SectionCard } from './SectionCard'
+import { saveSettings } from './save'
 
 function localDateStamp(): string {
   const d = new Date()
@@ -55,6 +56,7 @@ export function DataSection({ settings }: { settings: Settings }) {
       progressionState,
     })
     download(json, `apogee-backup-${localDateStamp()}.json`, 'application/json')
+    void saveSettings({ lastBackupAt: Date.now() })
   }
 
   const exportCsv = async () => {
@@ -141,6 +143,7 @@ export function DataSection({ settings }: { settings: Settings }) {
 
   return (
     <SectionCard label="Your data" caption="Local-first. Everything lives on this device.">
+      <StorageStatus />
       <div className="space-y-3">
         <Button className="w-full" onClick={() => void exportJson()}>
           <FileJson size={18} aria-hidden />
@@ -219,5 +222,28 @@ export function DataSection({ settings }: { settings: Settings }) {
         </div>
       </Sheet>
     </SectionCard>
+  )
+}
+
+/**
+ * Whether the browser has granted persistent storage. Best-effort storage
+ * can be evicted under pressure — for a local-first log that means losing
+ * everything, so surface it instead of hiding it.
+ */
+function StorageStatus() {
+  const [persisted, setPersisted] = useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    void navigator.storage
+      ?.persisted?.()
+      .then(setPersisted)
+      .catch(() => setPersisted(undefined))
+  }, [])
+  if (persisted === undefined) return null
+  return (
+    <p className={`mb-3 text-sm ${persisted ? 'text-dust' : 'text-plate-yellow'}`}>
+      {persisted
+        ? 'Storage is protected — the browser will not evict your log.'
+        : 'Storage is best-effort in this browser — export backups regularly, or install the app to your home screen for durable storage.'}
+    </p>
   )
 }

@@ -131,6 +131,8 @@ export interface Settings {
   /** Per-muscle weekly working-set guideline bands (editable). */
   volumeBands: Partial<Record<MuscleGroup, VolumeBand>>
   restTimerSound: boolean
+  /** When the user last downloaded a JSON backup; drives the backup nudge. */
+  lastBackupAt?: number
 }
 
 /** A past session's working sets for one exercise, as fed to the engine. */

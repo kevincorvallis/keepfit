@@ -5,6 +5,7 @@ import { startEmptySession, startSessionFromDay } from '../../state/workout'
 import type { Program, ProgramDay } from '../../lib/types'
 import ActiveWorkout from './ActiveWorkout'
 import { DeloadBanner } from './DeloadBanner'
+import { BackupNudge } from './BackupNudge'
 
 /**
  * The Train tab: the workout player when a session is live, otherwise the
@@ -49,6 +50,7 @@ function StartHome() {
     <div>
       <PageHeader sub="Apogee" title="Train" />
       <DeloadBanner />
+      <BackupNudge />
       {programs === undefined ? null : programs.length === 0 ? (
         <EmptyState
           title="No programs yet"
