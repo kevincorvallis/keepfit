@@ -42,9 +42,31 @@ export function PageHeader({ title, sub, action }: { title: string; sub?: string
   )
 }
 
+/** Quiet chalk-outline barbell for empty screens — brand, not decoration. */
+function BarbellArt() {
+  return (
+    <svg
+      viewBox="0 0 96 40"
+      className="mx-auto mb-4 w-20 text-faint"
+      aria-hidden
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    >
+      <line x1="4" y1="20" x2="92" y2="20" />
+      <rect x="20" y="6" width="7" height="28" rx="2.5" />
+      <rect x="31" y="11" width="5" height="18" rx="2" />
+      <rect x="69" y="6" width="7" height="28" rx="2.5" />
+      <rect x="60" y="11" width="5" height="18" rx="2" />
+    </svg>
+  )
+}
+
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
   return (
     <div className="mx-5 my-10 rounded-card border border-dashed border-line p-8 text-center">
+      <BarbellArt />
       <p className="font-display text-xl font-semibold uppercase">{title}</p>
       <p className="mt-2 text-sm text-dust">{body}</p>
       {action && <div className="mt-5 flex justify-center">{action}</div>}

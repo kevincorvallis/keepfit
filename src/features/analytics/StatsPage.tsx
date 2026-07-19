@@ -1,5 +1,6 @@
 import { EmptyState, PageHeader } from '../../app/ui'
 import { useExerciseMap, useFinishedSessions, useSettings } from '../../state/hooks'
+import { ConsistencyCalendar } from './ConsistencyCalendar'
 import { VolumeHeatGrid } from './VolumeHeatGrid'
 import { ExerciseTrend } from './ExerciseTrend'
 import { PrList } from './PrList'
@@ -23,6 +24,7 @@ export default function StatsPage() {
         />
       ) : (
         <div className="space-y-8 px-5 pb-4">
+          <ConsistencyCalendar sessions={sessions} />
           <VolumeHeatGrid
             sessions={sessions}
             exercises={exercises}

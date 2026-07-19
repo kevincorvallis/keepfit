@@ -1,4 +1,5 @@
-import type { Session, Unit } from '../../lib/types'
+import type { Exercise, MuscleGroup, Session, Unit } from '../../lib/types'
+import { MUSCLE_GROUPS } from '../../lib/types'
 import { epley } from '../../lib/e1rm'
 
 /** Σ weight × reps across a session's working sets. */
@@ -20,6 +21,39 @@ export function workingSetCount(session: Session): number {
     }
   }
   return count
+}
+
+export interface MuscleSets {
+  muscle: MuscleGroup
+  sets: number
+}
+
+/**
+ * Working sets per muscle group for one session. Primary muscles count 1.0
+ * per working set, secondary 0.5 — the same weighting as weeklyVolume in
+ * lib/volume. Only muscles with sets > 0, sorted descending (ties keep
+ * MUSCLE_GROUPS order).
+ */
+export function sessionMuscleSets(
+  session: Session,
+  exercises: Map<string, Exercise>,
+): MuscleSets[] {
+  const totals = new Map<MuscleGroup, number>()
+  for (const entry of session.entries) {
+    const exercise = exercises.get(entry.exerciseId)
+    if (!exercise) continue
+    const workingSets = entry.sets.filter((s) => !s.isWarmup).length
+    if (workingSets === 0) continue
+    for (const m of exercise.primaryMuscles) {
+      totals.set(m, (totals.get(m) ?? 0) + workingSets)
+    }
+    for (const m of exercise.secondaryMuscles) {
+      totals.set(m, (totals.get(m) ?? 0) + workingSets * 0.5)
+    }
+  }
+  return MUSCLE_GROUPS.filter((m) => (totals.get(m) ?? 0) > 0)
+    .map((muscle) => ({ muscle, sets: totals.get(muscle) ?? 0 }))
+    .sort((a, b) => b.sets - a.sets)
 }
 
 /** Compact volume for cards: "12,450 kg". */

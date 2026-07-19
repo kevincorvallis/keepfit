@@ -8,6 +8,7 @@ import { useExerciseMap, useSettings } from '../../state/hooks'
 import type { SessionEntry, Unit } from '../../lib/types'
 import { epley } from '../../lib/e1rm'
 import { formatDuration } from './sessionStats'
+import MuscleBars from './MuscleBars'
 
 function formatNumber(value: number): string {
   const rounded = Math.round(value * 100) / 100
@@ -72,6 +73,8 @@ export default function SessionDetailPage() {
             ` · ${formatDuration(session.startedAt, session.finishedAt)}`}
         </p>
       </header>
+
+      <MuscleBars session={session} exercises={exercises} />
 
       <div className="space-y-3 px-5">
         {session.entries.map((entry) => (
