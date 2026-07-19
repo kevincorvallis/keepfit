@@ -8,6 +8,7 @@ import HistoryPage from '../features/history/HistoryPage'
 import SessionDetailPage from '../features/history/SessionDetailPage'
 import StatsPage from '../features/analytics/StatsPage'
 import SettingsPage from '../features/settings/SettingsPage'
+import { useSettings } from '../state/hooks'
 
 /**
  * Last line of defense: a render crash (e.g. from unexpected data shapes)
@@ -51,10 +52,14 @@ const tabs = [
 ]
 
 export default function App() {
+  // Gate routes on the settings row so no screen ever renders with the
+  // unit fallback — kg users must never see a flash of lb labels.
+  const settings = useSettings()
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
       <main className="flex-1 pb-24">
         <RouteErrorBoundary>
+          {settings === undefined ? null : (
           <Routes>
             <Route path="/" element={<TrainPage />} />
             <Route path="/programs" element={<ProgramsPage />} />
@@ -64,6 +69,7 @@ export default function App() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
+          )}
         </RouteErrorBoundary>
       </main>
       <nav

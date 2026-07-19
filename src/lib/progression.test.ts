@@ -538,7 +538,7 @@ describe('convertProgressionUnits', () => {
       'lb',
       'kg',
     )
-    expect(iso).toMatchObject({ increment: 1.25, roundTo: 1.25 })
+    expect(iso).toMatchObject({ increment: 2.5, roundTo: 2.5 })
   })
 
   it('converts custom values to the nearest micro-plate step, never below it', () => {
@@ -603,7 +603,7 @@ describe('defaultProgression', () => {
     expect(defaultProgression('cable', 'kg')).toEqual(machine)
   })
 
-  it('isolation machine/cable: 12–20 with 1.25 kg / 2.5 lb micro steps', () => {
+  it('isolation machine/cable: 12–20 with 1.25 kg micro / 5 lb stack steps', () => {
     expect(defaultProgression('cable', 'kg', { isolation: true })).toMatchObject({
       minReps: 12,
       maxReps: 20,
@@ -611,8 +611,8 @@ describe('defaultProgression', () => {
       roundTo: 1.25,
     })
     expect(defaultProgression('machine', 'lb', { isolation: true })).toMatchObject({
-      increment: 2.5,
-      roundTo: 2.5,
+      increment: 5,
+      roundTo: 5,
     })
   })
 })

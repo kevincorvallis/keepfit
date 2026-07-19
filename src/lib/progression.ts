@@ -404,9 +404,10 @@ export function defaultProgression(
   if (equipment === 'bodyweight') {
     return { ...base, minReps: 8, maxReps: 15, increment: kg ? 2.5 : 5, roundTo: kg ? 2.5 : 5 }
   }
-  // machine / cable
+  // machine / cable — US selectorized stacks rarely step below 5 lb, so the
+  // lb isolation increment stays at 5 even though kg stacks go finer.
   if (opts?.isolation) {
-    return { ...base, minReps: 12, maxReps: 20, increment: kg ? 1.25 : 2.5, roundTo: kg ? 1.25 : 2.5 }
+    return { ...base, minReps: 12, maxReps: 20, increment: kg ? 1.25 : 5, roundTo: kg ? 1.25 : 5 }
   }
   return { ...base, minReps: 10, maxReps: 15, increment: kg ? 2.5 : 5, roundTo: kg ? 2.5 : 5 }
 }
