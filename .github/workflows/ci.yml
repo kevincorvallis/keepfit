@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-west-2
+      APP_ID: d29q2dp8vb13f6
+      BRANCH: main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check deploy credentials
+        id: creds
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AWS secrets not configured — skipping deploy (tests still gate)."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: steps.creds.outputs.configured == 'true'
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy to Amplify
+        if: steps.creds.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          cd dist && zip -qr ../dist.zip . && cd ..
+          DEPLOY=$(aws amplify create-deployment --app-id "$APP_ID" --branch-name "$BRANCH")
+          JOB_ID=$(echo "$DEPLOY" | jq -r .jobId)
+          UPLOAD_URL=$(echo "$DEPLOY" | jq -r .zipUploadUrl)
+          curl -sf -H "Content-Type: application/zip" --upload-file dist.zip "$UPLOAD_URL"
+          aws amplify start-deployment --app-id "$APP_ID" --branch-name "$BRANCH" --job-id "$JOB_ID"
+          for i in $(seq 1 30); do
+            STATUS=$(aws amplify get-job --app-id "$APP_ID" --branch-name "$BRANCH" --job-id "$JOB_ID" --query 'job.summary.status' --output text)
+            echo "status: $STATUS"
+            [ "$STATUS" = "SUCCEED" ] && exit 0
+            [ "$STATUS" = "FAILED" ] && exit 1
+            sleep 10
+          done
+          echo "timed out waiting for deployment" && exit 1
